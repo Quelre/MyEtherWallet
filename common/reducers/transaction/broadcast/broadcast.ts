@@ -3,16 +3,13 @@ import {
   TypeKeys as TK,
   BroadcastTransactionQueuedAction,
   BroadcastTransactionSucceededAction,
-  BroadcastTransactionFailedAction
+  BroadcastTransactionFailedAction,
+  BroadcastAction
 } from 'actions/transaction';
 import { ReducersMapObject } from 'redux';
-import { createReducerFromObj } from 'reducers/transaction/helpers';
 
 const INITIAL_STATE = {};
-const handleQueue = (
-  state: State,
-  { payload }: BroadcastTransactionQueuedAction
-): State => {
+const handleQueue = (state: State, { payload }: BroadcastTransactionQueuedAction): State => {
   const { indexingHash, serializedTransaction } = payload;
   const nextTxStatus: ITransactionStatus = {
     broadcastedHash: null,
@@ -23,10 +20,7 @@ const handleQueue = (
   return { ...state, [indexingHash]: nextTxStatus };
 };
 
-const handleSuccess = (
-  state: State,
-  { payload }: BroadcastTransactionSucceededAction
-): State => {
+const handleSuccess = (state: State, { payload }: BroadcastTransactionSucceededAction): State => {
   const { broadcastedHash, indexingHash } = payload;
   const existingTx = state[indexingHash];
   if (!existingTx) {
@@ -41,10 +35,7 @@ const handleSuccess = (
   return { ...state, [indexingHash]: nextTx };
 };
 
-const handleFailure = (
-  state: State,
-  { payload }: BroadcastTransactionFailedAction
-): State => {
+const handleFailure = (state: State, { payload }: BroadcastTransactionFailedAction): State => {
   const { indexingHash } = payload;
   const existingTx = state[indexingHash];
   if (!existingTx) {
@@ -64,4 +55,9 @@ const reducerObj: ReducersMapObject = {
   [TK.BROADCAST_TRASACTION_FAILED]: handleFailure
 };
 
-export const broadcast = createReducerFromObj(reducerObj, INITIAL_STATE);
+export const broadcast = (state: State = INITIAL_STATE, action: BroadcastAction) => {
+  switch (action.type) {
+    case TK.BROADCAST_TRANSACTION_QUEUED:
+      handleQueue(state, action);
+  }
+};
